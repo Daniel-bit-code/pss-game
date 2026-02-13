@@ -684,23 +684,54 @@ function createPlayer() {
 
 function startChatListener() {
     if (gameState.unsubscribeChat) gameState.unsubscribeChat();
-    const q = query(collection(db, "chats"), where("area", "==", gameState.currentArea), limit(25));
+    // removed area filter to make chat global across the "server" as requested
+    const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(25));
     gameState.unsubscribeChat = onSnapshot(q, (sn) => {
         const msgs = []; sn.forEach(doc => msgs.push(doc.data()));
         const chatBox = document.getElementById('chatMessages');
         if (chatBox) {
-            chatBox.innerHTML = msgs.sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis()).map(m => `<div class="chat-msg"><span class="sender">${m.sender}:</span> ${m.text}</div>`).join('');
+            // Sort by timestamp, handling potential nulls from serverTimestamp()
+            const sorted = msgs.sort((a, b) => {
+                const tA = a.timestamp ? a.timestamp.toMillis() : Date.now();
+                const tB = b.timestamp ? b.timestamp.toMillis() : Date.now();
+                return tA - tB;
+            });
+            chatBox.innerHTML = sorted.map(m => `<div class="chat-msg"><span class="sender">${m.sender || 'Explorer'}:</span> ${m.text}</div>`).join('');
             chatBox.scrollTop = chatBox.scrollHeight;
         }
+    }, (err) => {
+        console.error("Chat Listener Error:", err);
+        // Fallback: If orderBy fails due to missing index, try a simpler query
+        const fallbackQ = query(collection(db, "chats"), limit(25));
+        gameState.unsubscribeChat = onSnapshot(fallbackQ, (sn) => {
+            const msgs = []; sn.forEach(doc => msgs.push(doc.data()));
+            const chatBox = document.getElementById('chatMessages');
+            if (chatBox) {
+                const sorted = msgs.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+                chatBox.innerHTML = sorted.map(m => `<div class="chat-msg"><span class="sender">${m.sender || 'Explorer'}:</span> ${m.text}</div>`).join('');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
     });
 }
 
 async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const txt = input.value.trim();
-    if (!txt || !gameState.username) return;
+    if (!txt) return;
+    const senderName = gameState.username || 'Explorer';
     input.value = '';
-    await addDoc(collection(db, "chats"), { sender: gameState.username, text: txt, area: gameState.currentArea, timestamp: serverTimestamp() });
+    try {
+        await addDoc(collection(db, "chats"), {
+            sender: senderName,
+            text: txt,
+            area: gameState.currentArea,
+            timestamp: serverTimestamp()
+        });
+    } catch (e) {
+        console.error("Send Chat Error:", e);
+        showNotification("Chat failed to send", "error");
+    }
 }
 
 function startMultiplayerListener() {
