@@ -122,6 +122,7 @@
                 <div class="hud-right">
                     <button class="hud-btn" onclick="showPetBag()">🎒 Swarm</button>
                     <button class="hud-btn" onclick="showShop()">🏪 Store</button>
+                    <button class="hud-btn" onclick="showCodes()">🏷️ Codes</button>
                     <button class="hud-btn" onclick="toggleMap()">🗺️ Travel</button>
                     <button class="hud-btn" onclick="showSettings()">⚙️</button>
                 </div>
@@ -202,6 +203,24 @@
                 </div>
                 <div class="settings-list">
                     <button class="action-btn danger" onclick="saveAndLogout()">Save & Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay hidden" id="codesOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>🏷️ Redeem Codes</h2>
+                    <button class="close-btn" onclick="hideCodes()">✕</button>
+                </div>
+                <div class="codes-content" style="padding: 20px; text-align: center;">
+                    <p style="margin-bottom: 20px; color: #636e72;">Enter a secret code to unlock cool rewards!</p>
+                    <div class="input-group">
+                        <input type="text" id="codeInput" placeholder="ENTER CODE HERE..."
+                            style="text-align: center; text-transform: uppercase;">
+                    </div>
+                    <button class="action-btn primary full-width" onclick="redeemCode()"
+                        style="margin-top: 15px;">Redeem Code</button>
                 </div>
             </div>
         </div>

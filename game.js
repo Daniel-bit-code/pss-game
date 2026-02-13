@@ -32,6 +32,7 @@ const gameState = {
     multiplier: 1.0,
     swarm: [],
     equippedPets: [],
+    redeemedCodes: [],
     unlockedAreas: ['glacier_bay'],
 
     player: {
@@ -74,7 +75,8 @@ const penguinTypes = {
     common: { name: 'Common', color: 0x2c3e50, mult: 0.5, icon: '🐧' },
     rare: { name: 'Rare', color: 0x3498db, mult: 2.0, icon: '❄️' },
     epic: { name: 'Epic', color: 0x9b59b6, mult: 6.0, icon: '💜' },
-    legendary: { name: 'Legendary', color: 0xf1c40f, mult: 15.0, icon: '👑' }
+    legendary: { name: 'Legendary', color: 0xf1c40f, mult: 15.0, icon: '👑' },
+    limited: { name: 'Limited', color: 0x00f2ff, mult: 50.0, icon: '🧊' }
 }
 
 let mainScene, mainCamera, mainRenderer, clock = new THREE.Clock(), keys = {};
@@ -210,6 +212,66 @@ async function buyEgg(type) {
     refresh3DPets(); updateUI(); saveGame();
 }
 
+async function redeemCode() {
+    const input = document.getElementById('codeInput');
+    const code = input.value.trim().toUpperCase();
+    if (!code) return;
+
+    if (gameState.redeemedCodes.includes(code)) {
+        showNotification("Code already used!", "error");
+        input.value = '';
+        return;
+    }
+
+    const codes = {
+        'WINTER2024': { type: 'snow', amount: 5000, msg: '❄️ 5,000 Snow rewarded!' },
+        'SNOW': { type: 'snow', amount: 2500, msg: '❄️ 2,500 Snow rewarded!' },
+        'EGGY': { type: 'egg', eggType: 'legendary', msg: '👑 Legendary Egg rewarded!' },
+        'FREEBIE': { type: 'snow', amount: 1000, msg: '❄️ 1,000 Snow rewarded!' },
+        'HATCH': { type: 'egg', eggType: 'rare', msg: '✨ Rare Egg rewarded!' },
+        'DRAGON': { type: 'pet', petType: 'limited', msg: '🧊 LIMITED ICE DRAGON rewarded!' }
+    };
+
+    if (codes[code]) {
+        const reward = codes[code];
+        if (reward.type === 'snow') {
+            gameState.snow += reward.amount;
+        } else if (reward.type === 'pet') {
+            const newPet = { type: reward.petType, id: Math.random().toString(36).substr(2, 9) };
+            gameState.swarm.push(newPet);
+            if (gameState.equippedPets.length < 4) gameState.equippedPets.push(newPet.id);
+            recalcMultiplier();
+            refresh3DPets();
+        } else if (reward.type === 'egg') {
+            // Reward an egg by directly hatching it (matching buyEgg logic)
+            let result = reward.eggType;
+            if (reward.eggType === 'legendary') {
+                const r = Math.random();
+                result = (r < 0.3) ? 'legendary' : 'epic';
+            } else if (reward.eggType === 'rare') {
+                const r = Math.random();
+                if (r < 0.1) result = 'legendary'; else if (r < 0.4) result = 'epic'; else result = 'rare';
+            }
+
+            const newPet = { type: result, id: Math.random().toString(36).substr(2, 9) };
+            gameState.swarm.push(newPet);
+            if (gameState.equippedPets.length < 4) gameState.equippedPets.push(newPet.id);
+            recalcMultiplier();
+            refresh3DPets();
+        }
+
+        gameState.redeemedCodes.push(code);
+        showNotification(reward.msg, "success");
+        input.value = '';
+        updateUI();
+        saveGame();
+        setTimeout(window.hideCodes, 1500);
+    } else {
+        showNotification("Invalid code!", "error");
+        input.value = '';
+    }
+}
+
 function equipBest() {
     const s = [...gameState.swarm].sort((a, b) => penguinTypes[b.type].mult - penguinTypes[a.type].mult);
     gameState.equippedPets = s.slice(0, 4).map(p => p.id);
@@ -229,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.equipBest = equipBest;
     window.sendChatMessage = sendChatMessage;
     window.travelTo = travelTo;
+    window.showCodes = () => { document.getElementById('codesOverlay').classList.remove('hidden'); };
+    window.hideCodes = () => { document.getElementById('codesOverlay').classList.add('hidden'); };
+    window.redeemCode = redeemCode;
     window.showPetBag = () => { document.getElementById('petBagOverlay').classList.remove('hidden'); renderPetBag(); };
     window.hidePetBag = () => { document.getElementById('petBagOverlay').classList.add('hidden'); };
     window.showShop = () => { document.getElementById('shopOverlay').classList.remove('hidden'); };
@@ -285,6 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const chatInp = document.getElementById('chatInput');
     if (chatInp) chatInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+    const codeInp = document.getElementById('codeInput');
+    if (codeInp) codeInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') redeemCode(); });
 });
 
 // ===================================
@@ -303,6 +371,7 @@ async function loadGameData(uid) {
                 gameState.style = d.style || 'explorer';
                 gameState.swarm = d.swarm || [];
                 gameState.equippedPets = d.equippedPets || [];
+                gameState.redeemedCodes = d.redeemedCodes || [];
                 gameState.currentArea = d.currentArea || 'glacier_bay';
                 gameState.unlockedAreas = d.unlockedAreas || ['glacier_bay'];
                 recalcMultiplier();
@@ -318,6 +387,7 @@ async function saveGame() {
     if (!gameState.userId) return;
     const data = {
         snow: gameState.snow, swarm: gameState.swarm, equippedPets: gameState.equippedPets,
+        redeemedCodes: gameState.redeemedCodes,
         currentArea: gameState.currentArea, unlockedAreas: gameState.unlockedAreas
     };
     try { await updateDoc(doc(db, "users", gameState.userId), data); }
@@ -411,7 +481,7 @@ function generateDetailedEnvironment() {
     // --- 2. PARTICLES SYSTEM (SNOW/EMBERS/DUST) ---
     const pCount = (area.type === 'snow' || area.type === 'forest') ? 80 : 40;
     const pColor = (area.type === 'volcano') ? 0xff5500 : (area.type === 'cave' ? 0x00f2ff : 0xffffff);
-    
+
     for (let i = 0; i < pCount; i++) {
         const pSize = Math.random() * 0.05 + 0.02;
         const p = new THREE.Mesh(new THREE.BoxGeometry(pSize, pSize, pSize), new THREE.MeshBasicMaterial({ color: pColor, transparent: true, opacity: 0.8 }));
@@ -424,7 +494,7 @@ function generateDetailedEnvironment() {
     for (let i = 0; i < 140; i++) {
         const x = (Math.random() - 0.5) * bounds * 2.2;
         const z = (Math.random() - 0.5) * bounds * 2.2;
-        if (Math.abs(x) < 3.5 && Math.abs(z) < 3.5) continue; 
+        if (Math.abs(x) < 3.5 && Math.abs(z) < 3.5) continue;
 
         const group = new THREE.Group();
         const rand = Math.random();
@@ -433,13 +503,13 @@ function generateDetailedEnvironment() {
             if (rand > 0.45) {
                 const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.8), new THREE.MeshPhongMaterial({ color: 0x4a2311 }));
                 trunk.position.y = 0.4; group.add(trunk);
-                for(let j=0; j<3; j++) {
-                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.2 - j*0.3, 1.4, 6), new THREE.MeshPhongMaterial({ color: 0x145a32 }));
-                    leaves.position.y = 1.2 + j*0.7; group.add(leaves);
+                for (let j = 0; j < 3; j++) {
+                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.2 - j * 0.3, 1.4, 6), new THREE.MeshPhongMaterial({ color: 0x145a32 }));
+                    leaves.position.y = 1.2 + j * 0.7; group.add(leaves);
                 }
             } else if (rand > 0.25) {
                 const log = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2.5, 6), new THREE.MeshPhongMaterial({ color: 0x4a2311 }));
-                log.rotation.z = Math.PI/2; log.position.y = 0.3; group.add(log);
+                log.rotation.z = Math.PI / 2; log.position.y = 0.3; group.add(log);
             } else {
                 group.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 0), new THREE.MeshPhongMaterial({ color: 0x7f8c8d })));
             }
@@ -455,21 +525,21 @@ function generateDetailedEnvironment() {
                 const vent = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.2, 0.3, 8), new THREE.MeshPhongMaterial({ color: 0x1a0505 }));
                 vent.position.y = 0.15; group.add(vent);
                 const lava = new THREE.Mesh(new THREE.CircleGeometry(0.8, 8), new THREE.MeshBasicMaterial({ color: 0xff4400 }));
-                lava.rotation.x = -Math.PI/2; lava.position.y = 0.31; group.add(lava);
+                lava.rotation.x = -Math.PI / 2; lava.position.y = 0.31; group.add(lava);
             } else {
                 group.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 0), new THREE.MeshPhongMaterial({ color: 0x1a0505 })));
             }
         } else {
             if (rand > 0.9) {
-                for(let k=0; k<5; k++) {
-                    const st = new THREE.Mesh(new THREE.IcosahedronGeometry(Math.random()*0.1 + 0.1, 0), new THREE.MeshPhongMaterial({ color: 0x95a5a6 }));
-                    st.position.set(Math.cos(k)*0.6, 0.1, Math.sin(k)*0.6); group.add(st);
+                for (let k = 0; k < 5; k++) {
+                    const st = new THREE.Mesh(new THREE.IcosahedronGeometry(Math.random() * 0.1 + 0.1, 0), new THREE.MeshPhongMaterial({ color: 0x95a5a6 }));
+                    st.position.set(Math.cos(k) * 0.6, 0.1, Math.sin(k) * 0.6); group.add(st);
                 }
             } else if (rand > 0.7) {
-                group.add(new THREE.Mesh(new THREE.SphereGeometry(Math.random()*0.8 + 0.4, 8, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshPhongMaterial({ color: 0xffffff })));
+                group.add(new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.8 + 0.4, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0xffffff })));
             } else if (rand > 0.4) {
-                const spike = new THREE.Mesh(new THREE.ConeGeometry(0.3, Math.random()*1 + 0.5, 4), new THREE.MeshPhongMaterial({ color: 0xd6eaf8, transparent: true, opacity: 0.8 }));
-                spike.position.y = spike.geometry.parameters.height/2; group.add(spike);
+                const spike = new THREE.Mesh(new THREE.ConeGeometry(0.3, Math.random() * 1 + 0.5, 4), new THREE.MeshPhongMaterial({ color: 0xd6eaf8, transparent: true, opacity: 0.8 }));
+                spike.position.y = spike.geometry.parameters.height / 2; group.add(spike);
             } else {
                 group.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.15, 0), new THREE.MeshPhongMaterial({ color: 0x566573 })));
             }
@@ -664,7 +734,7 @@ function animate() {
 
         // --- ATMOSPHERIC PARTICLES ---
         gameState.particles.forEach(p => {
-            if (p.type === 'volcano') { 
+            if (p.type === 'volcano') {
                 p.mesh.position.y += p.speed * 2; // Embers go up
                 p.mesh.position.x += Math.sin(t * 0.002 + p.mesh.position.y) * 0.01;
             } else {
