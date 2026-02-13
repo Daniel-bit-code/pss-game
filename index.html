@@ -122,6 +122,7 @@
                 <div class="hud-right">
                     <button class="hud-btn" onclick="showPetBag()">🎒 Swarm</button>
                     <button class="hud-btn" onclick="showShop()">🏪 Store</button>
+                    <button class="hud-btn" onclick="showAccount()">👤 Style</button>
                     <button class="hud-btn" onclick="showCodes()">🏷️ Codes</button>
                     <button class="hud-btn" onclick="toggleMap()">🗺️ Travel</button>
                     <button class="hud-btn" onclick="showSettings()">⚙️</button>
@@ -221,6 +222,39 @@
                     </div>
                     <button class="action-btn primary full-width" onclick="redeemCode()"
                         style="margin-top: 15px;">Redeem Code</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay hidden" id="accountOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>👤 Change Style</h2>
+                    <button class="close-btn" onclick="hideAccount()">✕</button>
+                </div>
+                <div class="account-content" style="padding: 10px;">
+                    <div class="option-group" style="margin-bottom: 20px;">
+                        <label>Gender</label>
+                        <div class="radio-buttons">
+                            <label class="radio-btn"><input type="radio" name="accGender" value="boy" id="accGenderBoy">
+                                <span>👦 Boy</span></label>
+                            <label class="radio-btn"><input type="radio" name="accGender" value="girl"
+                                    id="accGenderGirl"> <span>👧 Girl</span></label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Character Style</label>
+                        <select id="accStyle">
+                            <option value="explorer">Classic Explorer</option>
+                            <option value="kitty">Hello Kitty Pack</option>
+                            <option value="ninja">Arctic Ninja</option>
+                            <option value="hero">Snow Hero</option>
+                            <option value="princess">Ice Princess</option>
+                            <option value="space">Space Cadet</option>
+                            <option value="pusheen">Pusheen Cat</option>
+                        </select>
+                    </div>
+                    <button class="action-btn primary full-width" onclick="saveAppearance()">Update Appearance</button>
                 </div>
             </div>
         </div>

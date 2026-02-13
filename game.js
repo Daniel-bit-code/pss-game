@@ -272,6 +272,22 @@ async function redeemCode() {
     }
 }
 
+async function saveAppearance() {
+    const g = document.querySelector('input[name="accGender"]:checked')?.value || 'boy';
+    const s = document.getElementById('accStyle')?.value || 'explorer';
+
+    gameState.gender = g;
+    gameState.style = s;
+
+    createPlayer();
+    showNotification("Appearance updated!", "success");
+    window.hideAccount();
+
+    if (gameState.userId) {
+        await updateDoc(doc(db, "users", gameState.userId), { gender: g, style: s });
+    }
+}
+
 function equipBest() {
     const s = [...gameState.swarm].sort((a, b) => penguinTypes[b.type].mult - penguinTypes[a.type].mult);
     gameState.equippedPets = s.slice(0, 4).map(p => p.id);
@@ -291,6 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.equipBest = equipBest;
     window.sendChatMessage = sendChatMessage;
     window.travelTo = travelTo;
+    window.showAccount = () => {
+        document.getElementById('accountOverlay').classList.remove('hidden');
+        if (gameState.gender === 'boy') document.getElementById('accGenderBoy').checked = true;
+        else document.getElementById('accGenderGirl').checked = true;
+        document.getElementById('accStyle').value = gameState.style;
+    };
+    window.hideAccount = () => { document.getElementById('accountOverlay').classList.add('hidden'); };
+    window.saveAppearance = saveAppearance;
     window.showCodes = () => { document.getElementById('codesOverlay').classList.remove('hidden'); };
     window.hideCodes = () => { document.getElementById('codesOverlay').classList.add('hidden'); };
     window.redeemCode = redeemCode;
@@ -553,7 +577,6 @@ function generateDetailedEnvironment() {
 function createExplorerMesh(gender, style, isRemote) {
     const group = new THREE.Group();
     let parkaColor = (gender === 'boy') ? 0x2980b9 : 0xe91e63;
-    if (isRemote) parkaColor = 0x808b96;
     if (style === 'kitty') parkaColor = 0xffffff;
     if (style === 'ninja') parkaColor = 0x212121;
     if (style === 'hero') parkaColor = 0xfbc531;
@@ -654,6 +677,7 @@ function createExplorerMesh(gender, style, isRemote) {
 }
 
 function createPlayer() {
+    if (gameState.player.mesh) mainScene.remove(gameState.player.mesh);
     const info = createExplorerMesh(gameState.gender, gameState.style, false);
     mainScene.add(info.group); gameState.player.mesh = info.group; gameState.player.parts = info.parts;
 }
