@@ -293,6 +293,38 @@ body {
     color: #fff;
 }
 
+.emoji-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.emoji-menu {
+    position: absolute;
+    bottom: 50px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--frost-cyan);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    z-index: 1000;
+}
+
+.emoji-menu span {
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.emoji-menu span:hover {
+    transform: scale(1.2);
+}
+
 /* ===================================
    HATCHER (Egg Breaking)
    =================================== */

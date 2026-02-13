@@ -139,7 +139,19 @@
             <!-- Chat Panel -->
             <div class="chat-panel" id="chatPanel">
                 <div class="chat-output" id="chatMessages"></div>
+                <div class="emoji-menu hidden" id="emojiMenu">
+                    <span onclick="addEmoji('🐧')">🐧</span>
+                    <span onclick="addEmoji('❄️')">❄️</span>
+                    <span onclick="addEmoji('🧊')">🧊</span>
+                    <span onclick="addEmoji('👑')">👑</span>
+                    <span onclick="addEmoji('✨')">✨</span>
+                    <span onclick="addEmoji('❤️')">❤️</span>
+                    <span onclick="addEmoji('😂')">😂</span>
+                    <span onclick="addEmoji('🔥')">🔥</span>
+                    <span onclick="addEmoji('👋')">👋</span>
+                </div>
                 <div class="chat-input-area">
+                    <button class="emoji-toggle" onclick="toggleEmojis()">😀</button>
                     <input type="text" id="chatInput" placeholder="Press Enter to chat..." autocomplete="off">
                     <button onclick="sendChatMessage()">Send</button>
                 </div>

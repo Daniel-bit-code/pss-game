@@ -373,6 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveAndLogout = saveAndLogout;
     window.hitEgg = hitEgg;
     window.closeHatcher = closeHatcher;
+    window.toggleEmojis = () => { document.getElementById('emojiMenu').classList.toggle('hidden'); };
+    window.addEmoji = (emo) => {
+        const inp = document.getElementById('chatInput');
+        if (inp) {
+            inp.value += emo;
+            inp.focus();
+            document.getElementById('emojiMenu').classList.add('hidden');
+        }
+    };
 
     // Mobile Collect Button
     const mbColl = document.getElementById('mobileCollectBtn');
@@ -725,8 +734,7 @@ function createPlayer() {
 
 function startChatListener() {
     if (gameState.unsubscribeChat) gameState.unsubscribeChat();
-    // removed area filter to make chat global across the "server" as requested
-    const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(25));
+    const q = query(collection(db, "chats"), limit(40));
     gameState.unsubscribeChat = onSnapshot(q, (sn) => {
         const msgs = []; sn.forEach(doc => msgs.push(doc.data()));
         const chatBox = document.getElementById('chatMessages');
@@ -742,17 +750,6 @@ function startChatListener() {
         }
     }, (err) => {
         console.error("Chat Listener Error:", err);
-        // Fallback: If orderBy fails due to missing index, try a simpler query
-        const fallbackQ = query(collection(db, "chats"), limit(25));
-        gameState.unsubscribeChat = onSnapshot(fallbackQ, (sn) => {
-            const msgs = []; sn.forEach(doc => msgs.push(doc.data()));
-            const chatBox = document.getElementById('chatMessages');
-            if (chatBox) {
-                const sorted = msgs.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
-                chatBox.innerHTML = sorted.map(m => `<div class="chat-msg"><span class="sender">${m.sender || 'Explorer'}:</span> ${m.text}</div>`).join('');
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        });
     });
 }
 
