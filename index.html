@@ -109,23 +109,26 @@
         <!-- HUD Overlay -->
         <div class="game-hud">
             <div class="hud-top">
-                <div class="resource-bar">
-                    <div class="resource-item">
-                        <span class="resource-icon">❄️</span>
-                        <span class="resource-value" id="snowCount">0</span>
+                <div class="hud-top-wrapper"
+                    style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+                    <div class="resource-bar">
+                        <div class="resource-item">
+                            <span class="resource-icon">❄️</span>
+                            <span class="resource-value" id="snowCount">0</span>
+                        </div>
+                        <div class="resource-item">
+                            <span class="resource-icon">🐧</span>
+                            <span class="resource-value" id="multiplierText">1.0x</span>
+                        </div>
                     </div>
-                    <div class="resource-item">
-                        <span class="resource-icon">🐧</span>
-                        <span class="resource-value" id="multiplierText">1.0x</span>
+                    <div class="hud-right">
+                        <button class="hud-btn" onclick="showPetBag()">🎒 Swarm</button>
+                        <button class="hud-btn" onclick="showShop()">🏪 Store</button>
+                        <button class="hud-btn" onclick="showAccount()">👤 Style</button>
+                        <button class="hud-btn" onclick="showCodes()">🏷️ Codes</button>
+                        <button class="hud-btn" onclick="toggleMap()">🗺️ Travel</button>
+                        <button class="hud-btn" onclick="showSettings()">⚙️</button>
                     </div>
-                </div>
-                <div class="hud-right">
-                    <button class="hud-btn" onclick="showPetBag()">🎒 Swarm</button>
-                    <button class="hud-btn" onclick="showShop()">🏪 Store</button>
-                    <button class="hud-btn" onclick="showAccount()">👤 Style</button>
-                    <button class="hud-btn" onclick="showCodes()">🏷️ Codes</button>
-                    <button class="hud-btn" onclick="toggleMap()">🗺️ Travel</button>
-                    <button class="hud-btn" onclick="showSettings()">⚙️</button>
                 </div>
             </div>
 
@@ -272,6 +275,23 @@
         <div class="collection-feedback hidden" id="collectionPopup">
             <span id="popupIcon">❄️</span>
             <span id="popupText">+10</span>
+        </div>
+
+        <!-- Hatcher Overlay (Big Egg) -->
+        <div class="hatcher-overlay hidden" id="hatcherOverlay">
+            <div class="hatcher-content">
+                <div class="egg-container" id="eggToBreak" onclick="hitEgg()">
+                    <div class="egg-visual">🥚</div>
+                    <div class="egg-cracks" id="eggCracks"></div>
+                    <div class="egg-hint">CLICK TO BREAK!</div>
+                </div>
+                <div class="hatch-result hidden" id="hatchResult">
+                    <div class="result-icon" id="resultIcon">🐧</div>
+                    <h2 id="resultTitle">New Penguin!</h2>
+                    <p id="resultDesc">Common Penguin Hatched</p>
+                    <button class="action-btn primary" onclick="closeHatcher()">AWESOME!</button>
+                </div>
+            </div>
         </div>
     </div>
 

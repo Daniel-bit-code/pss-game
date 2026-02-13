@@ -68,7 +68,8 @@ const gameState = {
     unsubscribeChat: null,
     device: 'pc',
     joystick: { x: 0, y: 0, active: false },
-    particles: []
+    particles: [],
+    eggHatchState: { hits: 0, result: null }
 };
 
 const penguinTypes = {
@@ -203,13 +204,51 @@ async function buyEgg(type) {
     else if (type === 'rare') { if (r < 0.1) result = 'legendary'; else if (r < 0.4) result = 'epic'; else result = 'rare'; }
     else { if (r < 0.05) result = 'epic'; else if (r < 0.3) result = 'rare'; }
 
-    const newPet = { type: result, id: Math.random().toString(36).substr(2, 9) };
+    // Start Hatching Sequence
+    gameState.eggHatchState = { hits: 0, result: result };
+    document.getElementById('eggCracks').textContent = '';
+    document.getElementById('eggToBreak').classList.remove('hidden');
+    document.getElementById('hatchResult').classList.add('hidden');
+    document.getElementById('hatcherOverlay').classList.remove('hidden');
+    document.getElementById('shopOverlay').classList.add('hidden');
+
+    showNotification(`You bought a ${type.toUpperCase()} egg!`, 'success');
+}
+
+function hitEgg() {
+    gameState.eggHatchState.hits++;
+    const container = document.getElementById('eggToBreak');
+    container.style.transform = `scale(${1.1 - gameState.eggHatchState.hits * 0.05})`;
+
+    let cracks = '';
+    for (let i = 0; i < gameState.eggHatchState.hits; i++) cracks += '💢';
+    document.getElementById('eggCracks').textContent = cracks;
+
+    if (gameState.eggHatchState.hits >= 3) {
+        finishHatch();
+    }
+}
+
+function finishHatch() {
+    const res = gameState.eggHatchState.result;
+    const newPet = { type: res, id: Math.random().toString(36).substr(2, 9) };
     gameState.swarm.push(newPet);
     if (gameState.equippedPets.length < 4) gameState.equippedPets.push(newPet.id);
 
     recalcMultiplier();
-    showNotification(`Hatched a ${result.toUpperCase()} penguin!`, 'success');
     refresh3DPets(); updateUI(); saveGame();
+
+    const typeInfo = penguinTypes[res];
+    document.getElementById('resultIcon').textContent = typeInfo.icon;
+    document.getElementById('resultTitle').textContent = typeInfo.name + "!";
+    document.getElementById('resultDesc').textContent = `You got a ${typeInfo.name} penguin!`;
+
+    document.getElementById('eggToBreak').classList.add('hidden');
+    document.getElementById('hatchResult').classList.remove('hidden');
+}
+
+function closeHatcher() {
+    document.getElementById('hatcherOverlay').classList.add('hidden');
 }
 
 async function redeemCode() {
@@ -332,6 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.saveAndLogout = saveAndLogout;
+    window.hitEgg = hitEgg;
+    window.closeHatcher = closeHatcher;
 
     // Mobile Collect Button
     const mbColl = document.getElementById('mobileCollectBtn');

@@ -294,6 +294,110 @@ body {
 }
 
 /* ===================================
+   HATCHER (Egg Breaking)
+   =================================== */
+.hatcher-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+}
+
+.hatcher-content {
+    text-align: center;
+}
+
+.egg-container {
+    cursor: pointer;
+    position: relative;
+    width: 200px;
+    height: 250px;
+    margin: 0 auto;
+    transition: transform 0.1s;
+}
+
+.egg-container:active {
+    transform: scale(0.95);
+}
+
+.egg-visual {
+    font-size: 150px;
+    line-height: 250px;
+    animation: egg-wobble 2s infinite ease-in-out;
+}
+
+@keyframes egg-wobble {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+.egg-hint {
+    margin-top: 20px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--frost-cyan);
+    text-shadow: 0 0 10px var(--frost-cyan);
+    letter-spacing: 2px;
+}
+
+.hatch-result {
+    animation: scale-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scale-up {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.result-icon {
+    font-size: 120px;
+    margin-bottom: 20px;
+}
+
+#resultTitle {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+
+#resultDesc {
+    font-size: 1.2rem;
+    color: #bdc3c7;
+    margin-bottom: 25px;
+}
+
+.egg-cracks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    font-size: 100px;
+    color: #444;
+}
+
+/* ===================================
    MODALS
    =================================== */
 .modal-overlay {
