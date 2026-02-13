@@ -774,20 +774,37 @@ async function sendChatMessage() {
 
 function startMultiplayerListener() {
     if (gameState.unsubscribeMultiplayer) gameState.unsubscribeMultiplayer();
-    const q = query(collection(db, "users"), where("currentArea", "==", gameState.currentArea));
+    // Removed area filter: Now all players are in the "same server" visible to each other!
+    const q = query(collection(db, "users"));
     gameState.unsubscribeMultiplayer = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             const data = change.doc.data(); const id = change.doc.id;
             if (id === gameState.userId) return;
+
             if (change.type === "removed") {
-                if (gameState.remotePlayers[id]) { mainScene.remove(gameState.remotePlayers[id].mesh); delete gameState.remotePlayers[id]; }
+                if (gameState.remotePlayers[id]) {
+                    mainScene.remove(gameState.remotePlayers[id].mesh);
+                    delete gameState.remotePlayers[id];
+                }
             } else {
-                if (!gameState.remotePlayers[id]) {
+                let rp = gameState.remotePlayers[id];
+                const needsRebuild = rp && (rp.lastStyle !== data.style || rp.lastGender !== data.gender);
+
+                if (!rp || needsRebuild) {
+                    if (rp) mainScene.remove(rp.mesh);
                     const info = createExplorerMesh(data.gender || 'boy', data.style || 'explorer', true);
                     mainScene.add(info.group);
-                    gameState.remotePlayers[id] = { mesh: info.group, parts: info.parts, target: new THREE.Vector3(data.x || 0, 0, data.z || 0), rot: data.rot || 0 };
+                    gameState.remotePlayers[id] = {
+                        mesh: info.group,
+                        parts: info.parts,
+                        target: new THREE.Vector3(data.x || 0, 0, data.z || 0),
+                        rot: data.rot || 0,
+                        lastStyle: data.style,
+                        lastGender: data.gender
+                    };
                 } else {
-                    const rp = gameState.remotePlayers[id]; rp.target.set(data.x || 0, 0, data.z || 0); rp.rot = data.rot || 0;
+                    rp.target.set(data.x || 0, 0, data.z || 0);
+                    rp.rot = data.rot || 0;
                 }
             }
         });
