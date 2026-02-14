@@ -874,6 +874,14 @@ function initJoystick() {
     const zone = document.getElementById('joystickZone');
     if (!zone) return;
 
+    // Add a real handle element for visual feedback
+    let handle = zone.querySelector('.joystick-handle');
+    if (!handle) {
+        handle = document.createElement('div');
+        handle.className = 'joystick-handle';
+        zone.appendChild(handle);
+    }
+
     const handleTouch = (e) => {
         e.preventDefault();
         const touch = e.touches[0];
@@ -884,10 +892,15 @@ function initJoystick() {
         const dx = touch.clientX - centerX;
         const dy = touch.clientY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = rect.width / 2;
+        const maxDist = rect.width / 2 - 20;
 
         const angle = Math.atan2(dy, dx);
         const power = Math.min(dist / maxDist, 1);
+
+        const moveX = Math.cos(angle) * power * maxDist;
+        const moveY = Math.sin(angle) * power * maxDist;
+
+        handle.style.transform = `translate(${moveX}px, ${moveY}px)`;
 
         gameState.joystick.x = Math.cos(angle) * power;
         gameState.joystick.y = Math.sin(angle) * power;
@@ -900,6 +913,7 @@ function initJoystick() {
         gameState.joystick.active = false;
         gameState.joystick.x = 0;
         gameState.joystick.y = 0;
+        handle.style.transform = `translate(0px, 0px)`;
     });
 }
 
